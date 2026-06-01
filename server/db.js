@@ -1,16 +1,20 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '1234',
-  database: process.env.DB_NAME || 'shubham_portfolio',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+const connectionString = process.env.MYSQL_PUBLIC_URL || process.env.MYSQL_URL || process.env.DATABASE_URL;
+
+const pool = connectionString 
+  ? mysql.createPool(connectionString)
+  : mysql.createPool({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || 'wfuexSeKraluDBLiknMbSEsckuBIlfbw',
+      database: process.env.DB_NAME || 'shubham_portfolio',
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    });
 
 // Test connection on load and auto-initialize tables
 const fs = require('fs');
@@ -18,7 +22,10 @@ const path = require('path');
 
 pool.getConnection()
   .then(async conn => {
-    console.log('Successfully connected to MySQL database: ' + (process.env.DB_NAME || 'shubham_portfolio'));
+    const dbName = connectionString 
+      ? (connectionString.split('/').pop() || 'Remote Database').split('?')[0]
+      : (process.env.DB_NAME || 'shubham_portfolio');
+    console.log('Successfully connected to MySQL database: ' + dbName);
     conn.release();
 
     // Auto-initialize tables if missing
@@ -29,7 +36,7 @@ pool.getConnection()
         const schemaPath = path.join(__dirname, 'schema.sql');
         if (fs.existsSync(schemaPath)) {
           const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-          
+
           // Split SQL into individual statements
           const statements = schemaSql
             .split(';')
