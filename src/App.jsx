@@ -216,6 +216,10 @@ function App() {
   const [activeAdminTab, setActiveAdminTab] = useState('general');
   const [adminSuccessMsg, setAdminSuccessMsg] = useState('');
 
+  // Messages Dashboard States
+  const [messages, setMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   // Editable forms buffer states
   const [editPersonal, setEditPersonal] = useState({ ...portfolioData.personal });
   const [editStats, setEditStats] = useState({ ...portfolioData.stats });
@@ -251,6 +255,28 @@ function App() {
   useEffect(() => {
     fetchPortfolio();
   }, []);
+
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch('/api/messages');
+      if (!res.ok) throw new Error('Failed to fetch messages');
+      const data = await res.json();
+      setMessages(data);
+      const unread = data.filter(m => !m.is_read).length;
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthorized) {
+      fetchMessages();
+      // Poll for new messages every 30 seconds while logged in
+      const interval = setInterval(fetchMessages, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthorized]);
 
   // Sync edits buffer when portfolioData changes
   useEffect(() => {
@@ -309,21 +335,45 @@ function App() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API request send
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to send message.');
+      }
+
       setFormStatus('success');
       setFormData({ name: '', email: '', subject: '', message: '' });
+
+      // If authorized, reload messages
+      if (isAuthorized) {
+        fetchMessages();
+      }
 
       // Clear status after 5s
       setTimeout(() => {
         setFormStatus(null);
       }, 5000);
-    }, 1500);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setFormStatus('error');
+      // Clear status after 5s
+      setTimeout(() => {
+        setFormStatus(null);
+      }, 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleNavClick = (sectionId) => {
@@ -431,6 +481,55 @@ function App() {
   const handleLogOut = () => {
     setIsAuthorized(false);
     setIsAdminOpen(false);
+  };
+
+  const handleToggleReadStatus = async (id, currentStatus) => {
+    try {
+      const res = await fetch(`/api/messages/${id}/read`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isRead: !currentStatus })
+      });
+
+      if (!res.ok) throw new Error('Failed to update read status');
+
+      // Update state locally
+      setMessages(prev => prev.map(m => {
+        if (m.id === id) {
+          return { ...m, is_read: !currentStatus ? 1 : 0 };
+        }
+        return m;
+      }));
+
+      // Update unread count
+      setUnreadCount(prev => currentStatus ? prev + 1 : prev - 1);
+    } catch (err) {
+      console.error('Error toggling read status:', err);
+    }
+  };
+
+  const handleDeleteMessage = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    try {
+      const res = await fetch(`/api/messages/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) throw new Error('Failed to delete message');
+
+      const wasUnread = !messages.find(m => m.id === id)?.is_read;
+
+      // Update state locally
+      setMessages(prev => prev.filter(m => m.id !== id));
+
+      if (wasUnread) {
+        setUnreadCount(prev => prev - 1);
+      }
+    } catch (err) {
+      console.error('Error deleting message:', err);
+    }
   };
 
   // Helpers for Projects CRUD inside Admin Panel
@@ -1005,6 +1104,12 @@ function App() {
                     Message sent successfully! I'll get back to you soon.
                   </div>
                 )}
+                {formStatus === 'error' && (
+                  <div className="form-status error" style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '10px 14px', borderRadius: '6px', fontSize: '14px', marginTop: '15px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <X size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                    Failed to send message. Please try again.
+                  </div>
+                )}
               </form>
             </div>
           </div>
@@ -1119,6 +1224,13 @@ function App() {
                     onClick={() => setActiveAdminTab('experience')}
                   >
                     <Briefcase size={16} /> Career Experience
+                  </button>
+                  <button
+                    className={`admin-tab-btn ${activeAdminTab === 'messages' ? 'active' : ''}`}
+                    onClick={() => setActiveAdminTab('messages')}
+                  >
+                    <Mail size={16} /> Messages
+                    {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
                   </button>
                 </div>
 
@@ -1516,6 +1628,66 @@ function App() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Messages Inbox Tab */}
+                  {activeAdminTab === 'messages' && (
+                    <div className="admin-form-section animate-fade-in">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h3>Contact Messages Inbox</h3>
+                        <span style={{ fontSize: '13px', background: 'rgba(255, 255, 255, 0.05)', padding: '5px 12px', borderRadius: '20px', color: 'var(--text-secondary)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                          Total: {messages.length} | Unread: {unreadCount}
+                        </span>
+                      </div>
+
+                      {messages.length === 0 ? (
+                        <div className="empty-messages-box">
+                          <Mail size={40} style={{ opacity: 0.3, marginBottom: '12px', color: 'var(--primary)' }} />
+                          <p style={{ color: 'var(--text-secondary)' }}>No messages received yet.</p>
+                        </div>
+                      ) : (
+                        <div className="messages-list">
+                          {messages.map((msg) => (
+                            <div className={`message-card ${!msg.is_read ? 'unread' : ''}`} key={msg.id}>
+                              <div className="message-card-header">
+                                <div className="msg-sender-info">
+                                  <span className="msg-sender-name">{msg.name}</span>
+                                  <a href={`mailto:${msg.email}`} className="msg-sender-email">{msg.email}</a>
+                                </div>
+                                <span className="msg-date">
+                                  {new Date(msg.created_at).toLocaleString('en-IN', {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short'
+                                  })}
+                                </span>
+                              </div>
+                              <div className="message-card-subject">
+                                <strong>Subject:</strong> {msg.subject}
+                              </div>
+                              <div className="message-card-body">
+                                {msg.message}
+                              </div>
+                              <div className="message-card-actions">
+                                <button
+                                  type="button"
+                                  className={`btn-action-read ${msg.is_read ? 'marked' : ''}`}
+                                  onClick={() => handleToggleReadStatus(msg.id, msg.is_read)}
+                                >
+                                  {msg.is_read ? 'Mark Unread' : 'Mark Read'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-action-delete"
+                                  onClick={() => handleDeleteMessage(msg.id)}
+                                >
+                                  <Trash2 size={14} /> Delete
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 

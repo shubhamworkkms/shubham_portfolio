@@ -30,6 +30,19 @@ pool.getConnection()
 
     // Auto-initialize tables if missing
     try {
+      // Ensure messages table exists
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            subject VARCHAR(150) NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_read BOOLEAN DEFAULT FALSE
+        )
+      `);
+
       const [tables] = await pool.query("SHOW TABLES LIKE 'personal_info'");
       if (tables.length === 0) {
         console.log("Database tables not found. Auto-initializing from schema.sql...");

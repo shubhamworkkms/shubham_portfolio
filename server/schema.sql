@@ -57,6 +57,17 @@ CREATE TABLE IF NOT EXISTS experience (
     bullets TEXT NOT NULL -- Stored as JSON array string of bullet points
 );
 
+-- 6. Table: messages
+CREATE TABLE IF NOT EXISTS messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    subject VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE
+);
+
 -- Seed Data (Delete existing data first to prevent duplicate seeding)
 TRUNCATE TABLE personal_info;
 TRUNCATE TABLE education;

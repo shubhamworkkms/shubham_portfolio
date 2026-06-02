@@ -203,6 +203,68 @@ app.post('/api/portfolio/save', async (req, res) => {
   }
 });
 
+// 3. POST /api/messages - Save new contact form submission
+app.post('/api/messages', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ error: 'All fields (name, email, subject, message) are required.' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO messages (name, email, subject, message) VALUES (?, ?, ?, ?)',
+      [name, email, subject, message]
+    );
+    res.json({ message: 'Message sent successfully!', messageId: result.insertId });
+  } catch (error) {
+    console.error('Error saving contact message:', error);
+    res.status(500).json({ error: 'Database save failed: ' + error.message });
+  }
+});
+
+// 4. GET /api/messages - Retrieve all messages
+app.get('/api/messages', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM messages ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Database query failed: ' + error.message });
+  }
+});
+
+// 5. PUT /api/messages/:id/read - Toggle is_read status of a message
+app.put('/api/messages/:id/read', async (req, res) => {
+  const { id } = req.params;
+  const { isRead } = req.body;
+
+  if (isRead === undefined) {
+    return res.status(400).json({ error: 'Missing isRead boolean in request body.' });
+  }
+
+  try {
+    await pool.query('UPDATE messages SET is_read = ? WHERE id = ?', [isRead ? 1 : 0, id]);
+    res.json({ message: `Message marked as ${isRead ? 'read' : 'unread'}.` });
+  } catch (error) {
+    console.error('Error updating message status:', error);
+    res.status(500).json({ error: 'Database update failed: ' + error.message });
+  }
+});
+
+// 6. DELETE /api/messages/:id - Delete a message
+app.delete('/api/messages/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query('DELETE FROM messages WHERE id = ?', [id]);
+    res.json({ message: 'Message deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({ error: 'Database delete failed: ' + error.message });
+  }
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`Express Portfolio API Server is running on port ${PORT}`);

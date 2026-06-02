@@ -1664,4 +1664,202 @@ textarea.form-control {
   color: #fff;
 }
 
+/* ==========================================================================
+   Messages Dashboard Inbox Styles
+   ========================================================================== */
+.unread-badge {
+  background-color: var(--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--border-radius-full);
+  margin-left: auto;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 0 6px rgba(255, 123, 0, 0.4);
+}
+
+.empty-messages-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  background-color: var(--bg-tertiary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-md);
+  text-align: center;
+}
+
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+/* Custom Scrollbar for messages list */
+.messages-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.messages-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.message-card {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 20px;
+  position: relative;
+  border-left: 4px solid var(--border-color);
+  transition: var(--transition-normal);
+}
+
+.message-card.unread {
+  border-left-color: var(--primary);
+  background-color: rgba(255, 123, 0, 0.02);
+}
+
+.message-card:hover {
+  border-color: rgba(255, 123, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.message-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.msg-sender-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg-sender-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.msg-sender-email {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+.msg-sender-email:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.msg-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.message-card-subject {
+  font-size: 14px;
+  color: #fff;
+  margin-bottom: 10px;
+  background-color: rgba(255, 255, 255, 0.02);
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.message-card-subject strong {
+  color: var(--primary);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.message-card-body {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.message-card-actions {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+}
+
+.btn-action-read {
+  font-size: 12px;
+  font-weight: 600;
+  background-color: rgba(255, 123, 0, 0.08);
+  border: 1px solid rgba(255, 123, 0, 0.2);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-action-read:hover {
+  background-color: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: var(--glow-orange);
+}
+
+.btn-action-read.marked {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-action-read.marked:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.btn-action-delete {
+  font-size: 12px;
+  font-weight: 600;
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  padding: 6px 14px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.btn-action-delete:hover {
+  background-color: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
 
