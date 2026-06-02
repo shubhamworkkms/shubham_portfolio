@@ -1,6 +1,3 @@
--- Create Database
-CREATE DATABASE IF NOT EXISTS shubham_portfolio;
-USE shubham_portfolio;
 
 -- 1. Table: personal_info
 CREATE TABLE IF NOT EXISTS personal_info (
